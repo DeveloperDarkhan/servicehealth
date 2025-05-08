@@ -19,7 +19,7 @@ func CheckService(url string) bool {
 }
 
 func PerformDiagnostics(host string) {
-	fmt.Println("Запуск диагностики...")
+	fmt.Println("\nЗапуск диагностики...")
 
 	// DNS
 	helpers.PrintDNS(host)

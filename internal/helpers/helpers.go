@@ -19,7 +19,7 @@ func CheckURL(url string, timeoutSeconds int) (bool, time.Duration) {
 	duration := time.Since(start)
 	if err != nil {
 		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-			fmt.Printf("Время ожидания истекло (таймаут: %d секунд)\n", timeoutSeconds)
+			fmt.Printf("\nВремя ожидания истекло (таймаут: %d секунд)\n", timeoutSeconds)
 		} else {
 			fmt.Println("Ошибка при запросе:", err)
 		}
@@ -66,7 +66,7 @@ func RunCommand(cmd string) {
 
 // DNS-запросы
 func PrintDNS(host string) {
-	fmt.Println("DNS-запрос для:", host)
+	fmt.Println("\nDNS-запрос для:", host)
 	ips, err := net.LookupHost(host)
 	if err != nil {
 		fmt.Println("Ошибка при DNS-запросе:", err)
@@ -98,7 +98,7 @@ func CheckPorts(ip string, ports []int) {
 
 // Ping хоста
 func Ping(host string) {
-	fmt.Println("Ping для:", host)
+	fmt.Println("\nPing для:", host)
 	RunCommand(fmt.Sprintf("ping -c 4 %s", host))
 }
 
