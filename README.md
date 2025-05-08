@@ -2,6 +2,8 @@
 
 Описание краткое — что делает приложение.
 
+### Запуск проекта по тест url
+go run cmd/monitor/main.go --url https://git.paybox.money --diagnostics
 ---
 
 ## Быстрый старт
