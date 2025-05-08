@@ -6,6 +6,8 @@ import (
 	"github.com/DeveloperDarkhan/servicehealth/internal/helpers"
 )
 
+var serviceStatus = true
+
 func CheckService(url string) bool {
 	fmt.Println("Проверка сервиса...")
 	success, responseTime := helpers.CheckURL(url, 5)
@@ -14,6 +16,7 @@ func CheckService(url string) bool {
 		return true
 	} else {
 		fmt.Println("Сервис недоступен или не отвечает.")
+		serviceStatus = false
 		return false
 	}
 }
@@ -31,5 +34,7 @@ func PerformDiagnostics(host string) {
 	helpers.Traceroute(host)
 
 	// SSL сертификат
-	helpers.CheckSSL(host)
+	if serviceStatus {
+		helpers.CheckSSL(host)
+	}
 }

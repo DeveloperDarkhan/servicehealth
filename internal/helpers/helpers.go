@@ -1,11 +1,13 @@
 package helpers
 
 import (
+	"bufio"
 	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -31,7 +33,7 @@ func CheckURL(url string, timeoutSeconds int) (bool, time.Duration) {
 
 // Проверка SSL сертификата
 func CheckSSL(host string) {
-	fmt.Println("Проверка SSL для:", host)
+	fmt.Println("\nПроверка SSL для:", host)
 	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second}, "tcp", host+":443", &tls.Config{
 		InsecureSkipVerify: true,
 	})
@@ -66,15 +68,25 @@ func RunCommand(cmd string) {
 
 // DNS-запросы
 func PrintDNS(host string) {
+	// Убираем префиксы http:// и https://
+	host = strings.TrimPrefix(host, "http://")
+	host = strings.TrimPrefix(host, "https://")
+
 	fmt.Println("\nDNS-запрос для:", host)
 	ips, err := net.LookupHost(host)
 	if err != nil {
 		fmt.Println("Ошибка при DNS-запросе:", err)
 		return
 	}
-	for _, ip := range ips {
-		fmt.Println(ip)
+
+	fmt.Printf("IP адреса DNS-запроса: ")
+	for i, ip := range ips {
+		if i > 0 {
+			fmt.Print(", ") // Добавляем запятую для разделения адресов
+		}
+		fmt.Print(ip)
 	}
+	fmt.Println() // добавляем перевод строки после вывода IP адресов
 
 	// Дополнительно проверяем доступность портов
 	for _, ip := range ips {
@@ -84,9 +96,12 @@ func PrintDNS(host string) {
 
 // Проверка доступности портов с помощью netcat
 func CheckPorts(ip string, ports []int) {
+
+	fmt.Printf("\nПроверка доступности портов: %v\n", ports)
 	for _, port := range ports {
 		address := fmt.Sprintf("%s:%d", ip, port)
 		conn, err := net.DialTimeout("tcp", address, 5*time.Second)
+
 		if err != nil {
 			fmt.Printf("Порт %d на %s недоступен: %v\n", port, ip, err)
 		} else {
@@ -96,14 +111,83 @@ func CheckPorts(ip string, ports []int) {
 	}
 }
 
+func RunCommandPing(cmd string) (string, error) {
+	outBytes, err := exec.Command("sh", "-c", cmd).CombinedOutput()
+	return string(outBytes), err
+}
+
 // Ping хоста
 func Ping(host string) {
-	fmt.Println("\nPing для:", host)
-	RunCommand(fmt.Sprintf("ping -c 4 %s", host))
+	host = strings.TrimPrefix(host, "http://")
+	host = strings.TrimPrefix(host, "https://")
+	fmt.Println("\nВыполнение: ping -c 4", host)
+
+	output, err := RunCommandPing(fmt.Sprintf("ping -c 4 %s", host))
+
+	// Не возвращаемся сразу, а анализируем вывод
+	if err != nil {
+		// Проверяем, является ли ошибка ExitError
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			// Получаем код выхода
+			statusCode := exitErr.ExitCode()
+			if statusCode == 2 {
+				fmt.Println("ICMP закрыт для этого домена")
+				return
+			} else {
+				fmt.Println("Ошибка выполнения, код:", statusCode)
+				fmt.Println("Вывод:\n", output)
+				return
+			}
+		} else {
+			// Не связанная с кодом выхода ошибка
+			fmt.Println("Ошибка выполнения:", err)
+			return
+		}
+	}
 }
 
 // Traceroute до хоста
 func Traceroute(host string) {
-	fmt.Println("Traceroute для:", host)
-	RunCommand(fmt.Sprintf("traceroute %s", host))
+	host = strings.TrimPrefix(host, "http://")
+	host = strings.TrimPrefix(host, "https://")
+	fmt.Println("\nTraceroute для:", host)
+	// output, err := RunCommandPing(fmt.Sprintf("traceroute -m 10 %s", host))
+
+	// // RunCommand(fmt.Sprintf("traceroute %s", host))
+	// if err != nil {
+	// 	fmt.Println("Ошибка выполнения:", err)
+	// }
+	// fmt.Println(string(output))
+
+	// Создаём команду
+	cmd := exec.Command("traceroute", "-m", "10", host)
+
+	// Получаем поток stdout
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println("Ошибка получения stdoutPipe:", err)
+		return
+	}
+
+	// Запускаем команду
+	if err := cmd.Start(); err != nil {
+		fmt.Println("Ошибка запуска команды:", err)
+		return
+	}
+
+	// Создаём сканер для построчного чтения
+	scanner := bufio.NewScanner(stdoutPipe)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(line) // выводим каждую строку по мере получения
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Ошибка при чтении вывода:", err)
+	}
+
+	// Ждём завершения команды
+	if err := cmd.Wait(); err != nil {
+		fmt.Println("Ошибка выполнения команды:", err)
+	}
 }
