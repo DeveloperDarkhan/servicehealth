@@ -3,7 +3,7 @@ package diagnostics
 import (
 	"fmt"
 
-	"github.com/yourusername/my-monitor/internal/diagnostics/helpers"
+	"github.com/DeveloperDarkhan/servicehealth/internal/helpers"
 )
 
 func CheckService(url string) bool {

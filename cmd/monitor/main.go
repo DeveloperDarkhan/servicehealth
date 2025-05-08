@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/yourusername/my-monitor/internal/diagnostics"
+	"github.com/DeveloperDarkhan/servicehealth/internal/diagnostics"
 )
 
 func main() {
