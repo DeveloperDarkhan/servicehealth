@@ -14,7 +14,7 @@ func CheckURL(url string, timeoutSeconds int) (bool, time.Duration) {
 	client := &http.Client{
 		Timeout: time.Duration(timeoutSeconds) * time.Second,
 	}
-	start := time.now()
+	start := time.Now()
 	resp, err := client.Get(url)
 	duration := time.Since(start)
 	if err != nil {

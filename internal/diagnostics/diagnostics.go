@@ -8,7 +8,7 @@ import (
 
 func CheckService(url string) bool {
 	fmt.Println("Проверка сервиса...")
-	success, responseTime := helpers.CheckURL(url, 10)
+	success, responseTime := helpers.CheckURL(url, 5)
 	if success {
 		fmt.Printf("Сервис доступен, время отклика: %.2f секунд\n", responseTime.Seconds())
 		return true
