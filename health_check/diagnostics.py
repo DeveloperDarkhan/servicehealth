@@ -5,22 +5,49 @@ import time
 import re
 import certifi
 from datetime import datetime
+import dns.resolver
+import ipaddress
 import requests
 import http.client
 import urllib.parse
 
+# resolvable, ips = check_dns(domain)
+
+def check_dns(domain):
+    try:
+        answers = dns.resolver.resolve(domain, 'A')
+        ip_list = [rdata.address for rdata in answers]
+        return True, ip_list
+    except dns.resolver.NXDOMAIN:
+        return False, []
+    except dns.resolver.NoAnswer:
+        return False, []
+    except dns.resolver.Timeout:
+        return False, []
+    
+def is_public_ip(ip):
+    ip_obj = ipaddress.ip_address(ip)
+    return not (ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_reserved)
+    
+def check_ports(ip, ports, timeout=3):
+    results = {}
+    for port in ports:
+        try:
+            with socket.create_connection((ip, port), timeout=timeout):
+                results[port] = True
+        except (socket.timeout, socket.error):
+            results[port] = False
+    return results
+
 def nslookup(domain, logger):
     try:
         output = subprocess.check_output(['nslookup', domain], stderr=subprocess.STDOUT, text=True)
-        # Парсинг сервера
-        server_match = re.search(r'Server:\s*(.*)', output)
-        server = server_match.group(1).strip() if server_match else "unknown"
         # Парсинг всех адресов
         addresses = re.findall(r'Address:\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', output)
         # Оставляем только уникальные адреса, убираем адрес сервера
-        addresses = [addr for addr in addresses if addr != server]
+        addresses = [addr for addr in addresses]
         addresses_str = ', '.join(addresses) if addresses else "none"
-        logger.info("[DNS_CHECK] - nslookup result for %s: - Server [%s], Addresses: [%s]", domain, server, addresses_str)
+        logger.info("[DNS_CHECK] - nslookup result for %s. Addresses: [%s]", domain, addresses_str)
     except Exception as e:
         logger.error("[DNS_CHECK] - nslookup failed: %s", str(e))
 
@@ -53,10 +80,56 @@ def latency_measure(url, logger, timeout=10):
         logger.warning("[LATENCY] - Failed to measure latency for %s: %s", url, str(e))
 
 # --- Расширенные проверки ---
+# def icmp_ping(domain, logger, count=3):
+#     try:
+#         output = subprocess.check_output(['ping', '-c', str(count), domain], stderr=subprocess.STDOUT, text=True)
+#         logger.info("[ICMP] - Ping result for %s:\n%s", domain, output.strip())
+#     except Exception as e:
+#         logger.warning("[ICMP] - Ping failed for %s: %s", domain, str(e))
+
+# def icmp_ping(domain, logger, count=3):
+#     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#     try:
+#         output = subprocess.check_output(['ping', '-c', str(count), domain], stderr=subprocess.STDOUT, text=True)
+#         logger.info("[ICMP] - Ping result for %s:\n%s", domain, output.strip())
+#     except Exception as e:
+#         logger.warning("[ICMP] - Ping failed for %s: %s", domain, str(e))
+
 def icmp_ping(domain, logger, count=3):
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     try:
         output = subprocess.check_output(['ping', '-c', str(count), domain], stderr=subprocess.STDOUT, text=True)
-        logger.info("[ICMP] - Ping result for %s:\n%s", domain, output.strip())
+        output_lines = output.strip().splitlines()
+
+        # Парсим статистику пакетов
+        stats_line = output_lines[-2]  # Обычно перед последней строкой
+        # Пример: '3 packets transmitted, 3 packets received, 0.0% packet loss'
+        match_stats = re.search(r'(\d+) packets transmitted, (\d+) packets received, ([\d.]+)% packet loss', stats_line)
+        if match_stats:
+            transmitted = int(match_stats.group(1))
+            received = int(match_stats.group(2))
+            packet_loss = match_stats.group(3)
+        else:
+            transmitted = received = 0
+            packet_loss = 'N/A'
+
+        # Парсим статистику времени RTT
+        rtt_line = output_lines[-1]  # Последняя строка
+        # Пример: 'round-trip min/avg/max/stddev = 109.355/110.760/113.046/1.631 ms'
+        match_rtt = re.search(r'=\s*([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)', rtt_line)
+        if match_rtt:
+            min_rtt = match_rtt.group(1)
+            avg_rtt = match_rtt.group(2)
+            max_rtt = match_rtt.group(3)
+            stddev_rtt = match_rtt.group(4)
+        else:
+            min_rtt = avg_rtt = max_rtt = stddev_rtt = 'N/A'
+
+        # Логируем в нужном формате
+        logger.info("[ICMP] - Ping statistics: {} packets transmitted, {} packets received, {}% packet loss".format(
+            transmitted, received, packet_loss))
+        logger.info("[ICMP] - Round-trip time: min/avg/max/stddev = {}/{}/{}/{} ms".format(
+            min_rtt, avg_rtt, max_rtt, stddev_rtt))
     except Exception as e:
         logger.warning("[ICMP] - Ping failed for %s: %s", domain, str(e))
 
@@ -66,11 +139,21 @@ def http_timing_metrics(url, logger, timeout=10):
         host = parsed.hostname
         port = parsed.port or (443 if parsed.scheme == 'https' else 80)
         path = parsed.path or '/'
+        # Выбираем класс соединения
         conn_cls = http.client.HTTPSConnection if parsed.scheme == 'https' else http.client.HTTPConnection
+
+        # Создаем контекст SSL с сертификатами certifi
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
 
         t_dns = t_connect = t_req = t_resp = 0
         t0 = time.time()
-        conn = conn_cls(host, port, timeout=timeout)
+
+        if parsed.scheme == 'https':
+            # Передаем ssl_context при создании соединения
+            conn = conn_cls(host, port, timeout=timeout, context=ssl_context)
+        else:
+            conn = conn_cls(host, port, timeout=timeout)
+
         t1 = time.time()
         conn.connect()
         t2 = time.time()
@@ -80,6 +163,7 @@ def http_timing_metrics(url, logger, timeout=10):
         t4 = time.time()
         resp.read()
         t5 = time.time()
+
         logger.info("[HTTP_TIMING] - DNS: %dms, Connect: %dms, TTFB: %dms, Transfer: %dms",
             int((t1-t0)*1000), int((t2-t1)*1000), int((t4-t3)*1000), int((t5-t4)*1000)
         )
@@ -116,15 +200,6 @@ def redirect_chain_analysis(url, logger, timeout=10, max_redirects=3):
     except Exception as e:
         logger.warning("[REDIRECTS] - Failed to analyze redirect chain for %s: %s", url, str(e))
 
-
-def geolocation_test(url, logger):
-    # MVP: просто логируем, что тест выполнен.
-    try:
-        logger.info("[GEOLOCATION] - Geolocation test simulated for %s (implement real test in production)", url)
-    except Exception as e:
-        logger.warning("[GEOLOCATION] - Failed to run geolocation test for %s: %s", url, str(e))
-
-
 # --- Контроллеры диагностики ---
 
 def run_basic_diagnostics(domain, url, logger, timeout=10):
@@ -140,4 +215,3 @@ def run_full_diagnostics(domain, url, logger, timeout=10):
     http_timing_metrics(url, logger, timeout)
     http_headers_check(url, logger, timeout)
     redirect_chain_analysis(url, logger, timeout)
-    geolocation_test(url, logger)

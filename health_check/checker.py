@@ -7,6 +7,41 @@ import socket
 
 from datetime import datetime
 
+def verify_dns(domain, logger, ports=[80, 443]):
+    resolvable, ips = check_dns(domain)
+    if not resolvable:
+        logger.error("[DNS_CHECK] - DNS resolution failed for %s", domain)
+        print("Start check your resolv configuration to check access to Public DNS or your local")
+        print("Check 8.8.8.8 and 1.1.1.1 or mayby private address")
+
+    else:
+        # logger.info("[DNS_CHECK] - DNS resolution successful, IPs: %s", ', '.join(ips))
+        for ip in ips:
+            # if is_public_ip(ip):
+            # logger.info("[IP_CHECK] - %s is public IP", ip)
+            
+            ports_to_check = ports
+            # port_access = False
+            port_access_found = False  # флаг, если хотя бы один IP с открытым портом
+            results = check_ports(ip, ports_to_check)
+
+            for port in ports_to_check:
+                if results[port]:
+                    # logger.info("[PORT_ACCESS] - Access to %s:%s is available", ip, port)
+                    if port == 443:
+                        port_access_found = True
+                # else:
+                #     logger.error("[PORT_ACCESS] - Access to %s:%s is not available", ip, port)
+                
+            # else:
+        if not port_access_found:
+            logger.info("[DNS_CHECK] - DNS resolution successful, IPs: %s", ', '.join(ips))
+            logger.error("[IP_CHECK] - IP addresses are private or behind a firewall, IPs: %s", ', '.join(ips))
+
+        # Проверка если один порт 443 доступен
+        if port_access_found:
+            return True
+
 def check_dns(domain):
     try:
         answers = dns.resolver.resolve(domain, 'A')
@@ -19,18 +54,13 @@ def check_dns(domain):
     except dns.resolver.Timeout:
         return False, []
 
+
 def is_public_ip(ip):
     ip_obj = ipaddress.ip_address(ip)
     return not (ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_reserved)
 
-# def check_port(ip, port, timeout=3):
-#     try:
-#         with socket.create_connection((ip, port), timeout=timeout):
-#             return True
-#     except (socket.timeout, socket.error):
-#         return False
-    
-def check_ports(ip, ports, timeout=3):
+
+def check_ports(ip, ports, timeout=2):
     results = {}
     for port in ports:
         try:
@@ -41,7 +71,8 @@ def check_ports(ip, ports, timeout=3):
     return results
 
 
-def check_http(url, keyword, timeout, logger):
+def check_http(domain, url, keyword, timeout, logger):
+    
     try:
         resp = requests.get(url, timeout=timeout)
         if resp.status_code == 200:
@@ -50,17 +81,38 @@ def check_http(url, keyword, timeout, logger):
             pattern = r'\b' + re.escape(keyword) + r'\b'
             if re.search(pattern, text, re.IGNORECASE):
                 now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f'[{now}] [INFO] [HTTP_CHECK] - Status code is 200 and response body contains a keyword "{keyword}"')
+                print(f'[{now}] [INFO] [HTTP_CHECK] - Status code is %d and response body contains a keyword "{resp.status_code}{keyword}"')
                 return True
             else:
                 # if logger:
-                logger.error('[HTTP_CHECK] - Status code 200 but keyword "%s" not found in response text', keyword)
+                logger.error('[HTTP_CHECK] - Check failed for url %s. Keyword "%s" not found in response text.', url, keyword)
+                # logger.error('[HTTP_CHECK] - Status code %d but keyword "%s" not found in response text', resp.status_code, keyword)                
                 return False
         else:
             # if logger:
             logger.error('[HTTP_CHECK] - Status code %d received', resp.status_code)
             return False
+        
+    except requests.exceptions.RequestException as e:
+        logger.error('[HTTP_CHECK] - Request failed: %s', str(e))
+
+# Get local IP address
+def get_local_ip(logger):
+    try:
+        # Connect to an external host; doesn't have to be reachable
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+        logger.info('[OWN_IP] - Local IP Address: %s', local_ip)
     except Exception as e:
-        # if logger:
-        logger.error('[HTTP_CHECK] - Exception: %s', str(e))
-        # return False
+        logger.error('[OWN_IP] - Exception obtaining local IP: %s', str(e))
+    
+# Get public IP address
+def get_public_ip(logger):
+    try:
+        response = requests.get('https://api.ipify.org?format=json')
+        response.raise_for_status()
+        public_ip = response.json()['ip']
+        logger.info('[OWN_IP] - Public IP Address: %s', public_ip)
+    except Exception as e:
+        logger.error('[OWN_IP] - Exception obtaining public IP: %s', str(e))
