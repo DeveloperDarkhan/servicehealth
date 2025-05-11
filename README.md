@@ -86,15 +86,15 @@ python health_check.py
 
 ```mermaid
 graph TD;
-    A[Инициализация] --> B[HTTP Check]
-    B --> C{Success?}
-    C -->|Да| D[Log Success]
-    C -->|Нет| E[Run Diagnostics]
-    E --> F[DNS Check]
-    E --> G[Port Check]
-    E --> H[SSL Check]
-    E --> I[Latency Check]
-    F --> J[Generate Report]
+    A[Инициализация] --> B[HTTP Check];
+    B --> C{Success?};
+    C -->|Да| D[Log Success];
+    C -->|Нет| E[Run Diagnostics];
+    E --> F[DNS Check];
+    E --> G[Port Check];
+    E --> H[SSL Check];
+    E --> I[Latency Check];
+    F --> J[Generate Report];
 ```
 
 ## Advanced Features
