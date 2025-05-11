@@ -83,8 +83,9 @@ python health_check.py
 ```
 
 ## Architecture
-ermaid
-graph TD
+
+```mermaid
+graph TD;
     A[Инициализация] --> B[HTTP Check]
     B --> C{Success?}
     C -->|Да| D[Log Success]
@@ -94,6 +95,7 @@ graph TD
     E --> H[SSL Check]
     E --> I[Latency Check]
     F --> J[Generate Report]
+```
 
 ## Advanced Features
 - Экспорт метрик в формате Prometheus
