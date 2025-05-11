@@ -1,6 +1,0 @@
-[2025-05-11 18:12:45] [ERROR] [diagnostics] - [HTTP_CHECK] - Status code 200 but keyword "Darkha" not found in response text
-[2025-05-11 18:12:45] [ERROR] [diagnostics] - [HTTP_CHECK] - Health check failed for url https://sre-test-assignment.innervate.tech/health.html with keyword "Darkha"
-[2025-05-11 18:12:45] [INFO] [diagnostics] - [DNS_CHECK] - nslookup result for sre-test-assignment.innervate.tech: - Server [8.8.8.8], Addresses: [108.156.22.98, 108.156.22.100, 108.156.22.45, 108.156.22.96]
-[2025-05-11 18:12:45] [INFO] [diagnostics] - [PORT_CHECK] - Port 443/TCP is open for sre-test-assignment.innervate.tech
-[2025-05-11 18:12:45] [INFO] [diagnostics] - [SSL_CHECK] - Certificate expires in 373 days for sre-test-assignment.innervate.tech
-[2025-05-11 18:12:45] [INFO] [diagnostics] - [LATENCY] - Latency for https://sre-test-assignment.innervate.tech/health.html: 253ms

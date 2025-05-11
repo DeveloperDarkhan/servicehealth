@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 from datetime import datetime
 
 def check_http(url, keyword, timeout, logger):
@@ -8,7 +9,8 @@ def check_http(url, keyword, timeout, logger):
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
-            if keyword.lower() in text.lower():
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            if re.search(pattern, text, re.IGNORECASE):
                 now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 print(f'[{now}] [INFO] [HTTP_CHECK] - Status code is 200 and response body contains a keyword "{keyword}"')
                 return True

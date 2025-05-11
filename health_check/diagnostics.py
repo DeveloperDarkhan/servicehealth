@@ -43,17 +43,6 @@ def ssl_check(domain, logger, port=443):
     except Exception as e:
         logger.warning("[SSL_CHECK] - Certificate check failed for %s: %s", domain, str(e))
 
-    # try:
-    #     context = ssl.create_default_context()
-    #     with socket.create_connection((domain, port)) as sock:
-    #         with context.wrap_socket(sock, server_hostname=domain) as ssock:
-    #             cert = ssock.getpeercert()
-    #             expire_date = datetime.strptime(cert['notAfter'], '%b %d %H:%M:%S %Y %Z')
-    #             days_left = (expire_date - datetime.utcnow()).days
-    #             logger.info("[SSL_CHECK] - Certificate expires in %d days for %s", days_left, domain)
-    # except Exception as e:
-    #     logger.warning("[SSL_CHECK] - Certificate check failed for %s: %s", domain, str(e))
-
 def latency_measure(url, logger, timeout=10):
     start = time.time()
     try:
