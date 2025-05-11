@@ -11,8 +11,8 @@
 
 ## Key Features
 ✅ Проверка здоровья сервиса с настраиваемым таймаутом  
-✅ Комплексная диагностика сетевых проблем  
-✅ Централизованное логирование в стандартизированном формате  
+✅ Комплексная диагностика сетевых проблем с возможностью выбора рассширенной проверки  
+✅ Централизованное логирование в стандартизированном формате
 ✅ Поддержка обязательных параметров CLI
 
 ## Diagnostic Requirements
@@ -64,6 +64,7 @@ python health_check.py \
 | --log-file    | diagnostics.log           | Файл логов                |
 | --retries     | 3                         | Число попыток             |
 | --keyword     | Success                   | Поиск слова ответе        |
+| --full-diagnostics | false                | Расширенная диагностика   |
 
 
 ## Testing Scenarios
@@ -79,7 +80,9 @@ python health_check.py --url https://valid-url/health.html --keyword "Success"
 ```
 
 ### Неудачная проверка
+```
 python health_check.py --url https://invalid-url/health.html --keyword "Success"
+```
 
 **Ожидаемый результат:**
 - Пустой stdout
@@ -88,6 +91,9 @@ python health_check.py --url https://invalid-url/health.html --keyword "Success"
 ## Logging Format
 **Требования к формату:**
 [YYYY-MM-DD HH:MM:SS] [LEVEL] [ACTION] - Message
+
+При запуске рассширенной диагностики выйдет сообщение:
+[YYYY-MM-DD HH:MM:SS] [INFO] [CONFIG] - Full diagnostics mode enabled
 
 **Пример логов:**
 ```
@@ -111,10 +117,22 @@ graph TD;
     StatusCheck -->|Нет| Diagnostics;
     KeywordCheck -->|Ключевое слово найдено| SuccessOutput[Вывод Success];
     KeywordCheck -->|Ключевое слово отсутствует| Diagnostics;
+    
     Diagnostics --> DNS[Проверка DNS];
     Diagnostics --> Port[Проверка порта 443];
     Diagnostics --> SSL[Проверка SSL];
-    Diagnostics --> Log[Запись в лог];
+    Diagnostics --> CheckFullDiag{--full-diagnostics?};
+    
+    CheckFullDiag -->|True| FullDiagnostics[Полная диагностика];
+    CheckFullDiag -->|False| Log[Запись в лог];
+    
+    FullDiagnostics --> Ping[ICMP Availability];
+    FullDiagnostics --> HTTPTiming[HTTP Timing Metrics];
+    FullDiagnostics --> Headers[HTTP Headers Check];
+    FullDiagnostics --> Redirects[Redirect Chain Analysis];
+    FullDiagnostics --> Geolocation[Geolocation Test];
+    FullDiagnostics --> Log;
+    
     Log --> Exit[Завершение работы];
 ```
 
