@@ -14,7 +14,7 @@
 - Проверка здоровья сервиса с таймаутом
 - Комплексная диагностика при сбоях
 - Логирование:
-    - содержит формат timestamp и идентификатор действия
+    - содержит формат timestamp, идентификатор действия и сообщение
     - при диагностики логи пишутся в /tmp/diagnostic.log
 - Расширенные сетевые проверки
 - Конфигурируемые параметры
@@ -48,12 +48,41 @@ python health_check.py \
 Расширенные параметры:
 ```
 python health_check.py 
-  --url  
-  --keyword "Success" 
-  --timeout 5 
+  --url
+  --keyword "Success"
+  --timeout 5 # Таймаут запроса в секундах (по умолчанию: 10)
   --log-level DEBUG
+  --log-file path.log # Путь к файлу логов (по умолчанию: ./diagnostics.log)
 ```
 
+## Testing Scenarios
+### Успешная проверка
+```
+python health_check.py --url https://valid-url/health.html --keyword "Success"
+```
+
+**Ожидаемый результат:**  
+Вывод "Success" в стандартный вывод
+
+### Неудачная проверка
+python health_check.py --url https://invalid-url/health.html --keyword "Success"
+
+**Ожидаемый результат:**
+- Пустой stdout
+- Запись диагностических данных в diagnostics.log
+
+## Logging Format
+**Требования к формату:**
+[YYYY-MM-DD HH:MM:SS] [LEVEL] [ACTION] - Message
+
+**Пример логов:**
+```
+[2023-11-21 09:15:23] [ERROR] [HTTP_CHECK] - Status code 503 received
+[2023-11-21 09:15:25] [INFO] [DNS_CHECK] - nslookup result for example.com: 192.0.2.1
+[2023-11-21 09:15:27] [WARNING] [SSL_CHECK] - Certificate expires in 7 days
+```
+
+Полный пример логов: [Pastebin](https://pastebin.com/example123)
 
 ## Configuration
 Параметры можно задать через:
