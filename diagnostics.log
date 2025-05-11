@@ -1,0 +1,7 @@
+[2025-05-11 19:49:07] [INFO] - [DNS_CHECK] - DNS resolution successful, IPs: 193.122.1.206
+[2025-05-11 19:49:07] [INFO] - [IP_CHECK] - 193.122.1.206 is public IP
+[2025-05-11 19:49:13] [ERROR] - [PORT_ACCESS] - Access to 193.122.1.206:80 is not available
+[2025-05-11 19:49:13] [ERROR] - [PORT_ACCESS] - Access to 193.122.1.206:443 is not available
+[2025-05-11 19:49:23] [ERROR] - [HTTP_CHECK] - Exception: HTTPSConnectionPool(host='git.paybox.money', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x1041b60f0>, 'Connection to git.paybox.money timed out. (connect timeout=10)'))
+[2025-05-11 19:49:23] [ERROR] - [HTTP_CHECK] - Health check failed for url https://git.paybox.money with keyword "Success"
+[2025-05-11 19:49:23] [INFO] - [DNS_CHECK] - nslookup result for git.paybox.money: - Server [8.8.8.8], Addresses: [193.122.1.206]
