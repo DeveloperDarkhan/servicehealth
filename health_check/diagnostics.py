@@ -2,6 +2,8 @@ import socket
 import ssl
 import subprocess
 import time
+import re
+import certifi
 from datetime import datetime
 import requests
 import http.client
@@ -10,7 +12,15 @@ import urllib.parse
 def nslookup(domain, logger):
     try:
         output = subprocess.check_output(['nslookup', domain], stderr=subprocess.STDOUT, text=True)
-        logger.info("[DNS_CHECK] - nslookup result for %s: %s", domain, output.strip())
+        # Парсинг сервера
+        server_match = re.search(r'Server:\s*(.*)', output)
+        server = server_match.group(1).strip() if server_match else "unknown"
+        # Парсинг всех адресов
+        addresses = re.findall(r'Address:\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', output)
+        # Оставляем только уникальные адреса, убираем адрес сервера
+        addresses = [addr for addr in addresses if addr != server]
+        addresses_str = ', '.join(addresses) if addresses else "none"
+        logger.info("[DNS_CHECK] - nslookup result for %s: - Server [%s], Addresses: [%s]", domain, server, addresses_str)
     except Exception as e:
         logger.error("[DNS_CHECK] - nslookup failed: %s", str(e))
 
@@ -23,15 +33,26 @@ def port_check(domain, logger, port=443, timeout=5):
 
 def ssl_check(domain, logger, port=443):
     try:
-        context = ssl.create_default_context()
+        context = ssl.create_default_context(cafile=certifi.where())
         with socket.create_connection((domain, port)) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
                 expire_date = datetime.strptime(cert['notAfter'], '%b %d %H:%M:%S %Y %Z')
                 days_left = (expire_date - datetime.utcnow()).days
-                logger.info("[SSL_CHECK] - Certificate expires in %d days for %s", days_left, domain)
+            logger.info("[SSL_CHECK] - Certificate expires in %d days for %s", days_left, domain)
     except Exception as e:
         logger.warning("[SSL_CHECK] - Certificate check failed for %s: %s", domain, str(e))
+
+    # try:
+    #     context = ssl.create_default_context()
+    #     with socket.create_connection((domain, port)) as sock:
+    #         with context.wrap_socket(sock, server_hostname=domain) as ssock:
+    #             cert = ssock.getpeercert()
+    #             expire_date = datetime.strptime(cert['notAfter'], '%b %d %H:%M:%S %Y %Z')
+    #             days_left = (expire_date - datetime.utcnow()).days
+    #             logger.info("[SSL_CHECK] - Certificate expires in %d days for %s", days_left, domain)
+    # except Exception as e:
+    #     logger.warning("[SSL_CHECK] - Certificate check failed for %s: %s", domain, str(e))
 
 def latency_measure(url, logger, timeout=10):
     start = time.time()
