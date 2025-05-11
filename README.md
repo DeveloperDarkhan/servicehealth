@@ -89,16 +89,21 @@ python health_check.py
 ## Architecture
 
 ```mermaid
-graph TD;
-    A[Инициализация] --> B[HTTP Check];
-    B --> C{Success?};
-    C -->|Да| D[Log Success];
-    C -->|Нет| E[Run Diagnostics];
-    E --> F[DNS Check];
-    E --> G[Port Check];
-    E --> H[SSL Check];
-    E --> I[Latency Check];
-    F --> J[Generate Report];
+graph TD
+    Start[Запуск скрипта] --> ParamCheck{Параметры валидны?};
+    ParamCheck -->|Да| HealthCheck;
+    ParamCheck -->|Нет| Error[Завершение с ошибкой];
+    HealthCheck --> HTTPReq[Отправка HTTP-запроса];
+    HTTPReq --> StatusCheck{Статус 200?};
+    StatusCheck -->|Да| KeywordCheck;
+    StatusCheck -->|Нет| Diagnostics;
+    KeywordCheck -->|Ключевое слово найдено| SuccessOutput[Вывод Success];
+    KeywordCheck -->|Ключевое слово отсутствует| Diagnostics;
+    Diagnostics --> DNS[Проверка DNS];
+    Diagnostics --> Port[Проверка порта 443];
+    Diagnostics --> SSL[Проверка SSL];
+    Diagnostics --> Log[Запись в лог];
+    Log --> Exit[Завершение работы];
 ```
 
 ## Advanced Features
