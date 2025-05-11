@@ -72,8 +72,11 @@ python health_check.py \
 python health_check.py --url https://valid-url/health.html --keyword "Success"
 ```
 
-**Ожидаемый результат:**  
-Вывод "Success" в стандартный вывод
+**Ожидаемый результат:**
+Вывод "Success" в stdout
+```
+[2023-11-21 09:15:25] [INFO] [HTTP_CHECK] - Status code is 200 and response body contains a keyword "Success"
+```
 
 ### Неудачная проверка
 python health_check.py --url https://invalid-url/health.html --keyword "Success"
