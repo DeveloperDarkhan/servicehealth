@@ -42,10 +42,13 @@ def check_ports(ip, ports, timeout=3):
 def nslookup(domain, logger):
     try:
         output = subprocess.check_output(['nslookup', domain], stderr=subprocess.STDOUT, text=True)
+        # Парсинг сервера
+        server_match = re.search(r'Server:\s*(.*)', output)
+        server = server_match.group(1).strip() if server_match else "unknown"
         # Парсинг всех адресов
         addresses = re.findall(r'Address:\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', output)
         # Оставляем только уникальные адреса, убираем адрес сервера
-        addresses = [addr for addr in addresses]
+        addresses = [addr for addr in addresses if addr != server]
         addresses_str = ', '.join(addresses) if addresses else "none"
         logger.info("[DNS_CHECK] - nslookup result for %s. Addresses: [%s]", domain, addresses_str)
     except Exception as e:
@@ -80,21 +83,6 @@ def latency_measure(url, logger, timeout=10):
         logger.warning("[LATENCY] - Failed to measure latency for %s: %s", url, str(e))
 
 # --- Расширенные проверки ---
-# def icmp_ping(domain, logger, count=3):
-#     try:
-#         output = subprocess.check_output(['ping', '-c', str(count), domain], stderr=subprocess.STDOUT, text=True)
-#         logger.info("[ICMP] - Ping result for %s:\n%s", domain, output.strip())
-#     except Exception as e:
-#         logger.warning("[ICMP] - Ping failed for %s: %s", domain, str(e))
-
-# def icmp_ping(domain, logger, count=3):
-#     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-#     try:
-#         output = subprocess.check_output(['ping', '-c', str(count), domain], stderr=subprocess.STDOUT, text=True)
-#         logger.info("[ICMP] - Ping result for %s:\n%s", domain, output.strip())
-#     except Exception as e:
-#         logger.warning("[ICMP] - Ping failed for %s: %s", domain, str(e))
-
 def icmp_ping(domain, logger, count=3):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     try:
@@ -131,7 +119,7 @@ def icmp_ping(domain, logger, count=3):
         logger.info("[ICMP] - Round-trip time: min/avg/max/stddev = {}/{}/{}/{} ms".format(
             min_rtt, avg_rtt, max_rtt, stddev_rtt))
     except Exception as e:
-        logger.warning("[ICMP] - Ping failed for %s: %s", domain, str(e))
+        logger.warning("[ICMP] - Ping failed or forbidden for %s", domain)
 
 def http_timing_metrics(url, logger, timeout=10):
     try:

@@ -10,9 +10,10 @@ from datetime import datetime
 def verify_dns(domain, logger, ports=[80, 443]):
     resolvable, ips = check_dns(domain)
     if not resolvable:
+        resolvable, ips = check_dns(domain, customnameservers=True)
+
+    if not resolvable:
         logger.error("[DNS_CHECK] - DNS resolution failed for %s", domain)
-        print("Start check your resolv configuration to check access to Public DNS or your local")
-        print("Check 8.8.8.8 and 1.1.1.1 or mayby private address")
 
     else:
         # logger.info("[DNS_CHECK] - DNS resolution successful, IPs: %s", ', '.join(ips))
@@ -42,9 +43,12 @@ def verify_dns(domain, logger, ports=[80, 443]):
         if port_access_found:
             return True
 
-def check_dns(domain):
+def check_dns(domain, customnameservers=False):
+
     try:
         answers = dns.resolver.resolve(domain, 'A')
+        if customnameservers:
+            answers.nameservers = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']
         ip_list = [rdata.address for rdata in answers]
         return True, ip_list
     except dns.resolver.NXDOMAIN:
@@ -81,7 +85,7 @@ def check_http(domain, url, keyword, timeout, logger):
             pattern = r'\b' + re.escape(keyword) + r'\b'
             if re.search(pattern, text, re.IGNORECASE):
                 now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f'[{now}] [INFO] [HTTP_CHECK] - Status code is %d and response body contains a keyword "{resp.status_code}{keyword}"')
+                print(f'[{now}] [INFO] - [HTTP_CHECK] - Status code is %d and response body contains a keyword "%s"' % (resp.status_code, keyword))
                 return True
             else:
                 # if logger:
