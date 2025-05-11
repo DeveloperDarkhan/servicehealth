@@ -89,7 +89,7 @@ python health_check.py
 ## Architecture
 
 ```mermaid
-graph TD
+graph TD;
     Start[Запуск скрипта] --> ParamCheck{Параметры валидны?};
     ParamCheck -->|Да| HealthCheck;
     ParamCheck -->|Нет| Error[Завершение с ошибкой];
