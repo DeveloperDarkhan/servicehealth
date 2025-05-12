@@ -1,21 +1,24 @@
-# Виртуальные окружения Python
+# Python Virtual Environments
 venv/
 .env/
 *.venv/
 pip-selfcheck.json
 
-# Кеш интерпретатора
+# Interpreter Cache
 __pycache__/
 *.py[cod]
 
-# IDE-специфичные файлы
+# IDE-specific Files
 .vscode/
 .idea/
 
-# Локальные настройки и секреты
+# Local Settings and Secrets
 .env
 *.env.local
 
-# Системные файлы (macOS/Windows)
+# System Files (macOS/Windows)
 .DS_Store
 Thumbs.db
+
+# Log File
+diagnostics.log

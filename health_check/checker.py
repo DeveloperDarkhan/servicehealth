@@ -8,6 +8,47 @@ import socket
 from datetime import datetime
 
 
+def validate_params(args):
+    """
+    Validates command-line parameters.
+
+    Returns:
+        - True if parameters are valid
+        - False if errors are found
+    """
+
+    # Check if URL is provided
+    if not args.url:
+        return False
+
+    # Add URL format validation if needed
+    # For example, using regex or urlparse
+
+    # Check if timeout is positive
+    if args.timeout <= 0:
+        return False
+
+    # Check keyword type if provided
+    if args.keyword is not None and not isinstance(args.keyword, str):
+        return False
+
+    # Add other validations as needed
+
+    return True
+
+
+def is_validate_params(args):
+    """
+    Validates args and logs error if invalid.
+    Returns True if valid, False otherwise.
+    """
+    if not validate_params(args):
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f'[{now}] [ERROR] - [ParamCheck] - Error: Invalid command-line parameters.')
+        return False
+    return True
+
+
 def verify_dns(domain, logger, ports=[80, 443]):
     """
     Comprehensive DNS check and IP address/port availability for a given domain (default ports 80 and 443).

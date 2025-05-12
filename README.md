@@ -34,7 +34,8 @@ A command-line tool for checking the availability of web services with automatic
 4. **Latency Measurement**  
    Measure service response time
 
-**Extended (require `--full-diagnostics`):**
+**Extended (require `--full-diagnostics`):**  
+
 5. **Get Local and Public IP addresses**  
    Output local IP addresses
 6. **ICMP Availability**  
@@ -129,7 +130,7 @@ When extended diagnostics are run, a message like this will be displayed:
 [2023-11-21 09:15:27] [WARNING] [SSL_CHECK] - Certificate expires in 7 days
 ```
 
-Full example logs: [Pastebin](https://pastebin.com/example123)
+Full example dignostics logs: [Pastebin](https://pastebin.com/Z3idhscu)
 
 ## Architecture
 
@@ -157,22 +158,12 @@ graph TD;
     FullDiagnostics --> HTTPTiming[HTTP timing metrics];
     FullDiagnostics --> Headers[HTTP headers check];
     FullDiagnostics --> Redirects[Redirect chain analysis];
-    FullDiagnostics --> Geolocation[Geolocation test];
+    FullDiagnostics --> GetOwnIP[Get your own IP address];
     FullDiagnostics --> Log;
 
     Log --> Exit[End of process];
 ```
 
-## Advanced Features
-- Export metrics in Prometheus format
-- Contextual timeouts for various checks
-- Colorized output in the console
-- Proxy server support
-- Historical performance analysis
 
 ## License
 MIT License. See the LICENSE file for details.
-
----
-
-Let me know if you'd like any further assistance!
