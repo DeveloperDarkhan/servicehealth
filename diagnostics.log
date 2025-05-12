@@ -1,0 +1,12 @@
+[2025-05-12 09:05:29] [ERROR] - [HTTP_CHECK] - Check failed for url https://sre-test-assignment.innervate.tech/health.html. Keyword "Dar" not found in response text.
+[2025-05-12 09:05:29] [INFO] - [CONFIG] - Full diagnostics mode enabled
+[2025-05-12 09:05:29] [INFO] - [DNS_CHECK] - nslookup result for sre-test-assignment.innervate.tech. Addresses: [52.222.136.71, 52.222.136.31, 52.222.136.36, 52.222.136.106]
+[2025-05-12 09:05:29] [INFO] - [PORT_CHECK] - Port 443/TCP is open for sre-test-assignment.innervate.tech
+[2025-05-12 09:05:29] [INFO] - [SSL_CHECK] - Certificate expires in 372 days for sre-test-assignment.innervate.tech
+[2025-05-12 09:05:29] [INFO] - [LATENCY] - Latency for https://sre-test-assignment.innervate.tech/health.html: 292ms
+[2025-05-12 09:05:30] [INFO] - [GET_OWN_IP] - Here is your local IP 192.168.31.201 and Public IP 95.56.158.7 that looks at the Internet
+[2025-05-12 09:05:32] [INFO] - [ICMP] - Ping statistics: 3 packets transmitted, 3 packets received, 0.0% packet loss
+[2025-05-12 09:05:32] [INFO] - [ICMP] - Round-trip time: min/avg/max/stddev = 95.510/97.235/99.681/1.777 ms
+[2025-05-12 09:05:33] [INFO] - [HTTP_TIMING] - DNS: 0ms, Connect: 197ms, TTFB: 95ms, Transfer: 0ms
+[2025-05-12 09:05:33] [WARNING] - [HEADERS] - Headers issues: Missing HSTS, Missing CSP, Missing cache control
+[2025-05-12 09:05:33] [INFO] - [REDIRECTS] - 0 redirects in chain
