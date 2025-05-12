@@ -34,7 +34,8 @@ A command-line tool for checking the availability of web services with automatic
 4. **Latency Measurement**  
    Measure service response time
 
-**Extended (require `--full-diagnostics`):**
+**Extended (require `--full-diagnostics`):**  
+
 5. **Get Local and Public IP addresses**  
    Output local IP addresses
 6. **ICMP Availability**  
