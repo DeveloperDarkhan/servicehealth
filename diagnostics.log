@@ -1,3 +1,11 @@
-[2025-05-12 03:07:04] [ERROR] - [DNS_CHECK] - DNS resolution failed for sre-test-assignment.innervatezzz.tech
-[2025-05-12 03:08:07] [INFO] - [DNS_CHECK] - DNS resolution successful, IPs: 193.122.1.206
-[2025-05-12 03:08:07] [ERROR] - [IP_CHECK] - IP addresses are private or behind a firewall, IPs: 193.122.1.206
+[2025-05-12 07:52:49] [ERROR] - [HTTP_CHECK] - Check failed for url https://sre-test-assignment.innervate.tech/health.html. Keyword "Dar" not found in response text.
+[2025-05-12 07:52:49] [INFO] - [CONFIG] - Full diagnostics mode enabled
+[2025-05-12 07:52:49] [INFO] - [DNS_CHECK] - nslookup result for sre-test-assignment.innervate.tech. Addresses: [52.222.136.71, 52.222.136.106, 52.222.136.36, 52.222.136.31]
+[2025-05-12 07:52:49] [INFO] - [PORT_CHECK] - Port 443/TCP is open for sre-test-assignment.innervate.tech
+[2025-05-12 07:52:50] [INFO] - [SSL_CHECK] - Certificate expires in 372 days for sre-test-assignment.innervate.tech
+[2025-05-12 07:52:50] [INFO] - [LATENCY] - Latency for https://sre-test-assignment.innervate.tech/health.html: 306ms
+[2025-05-12 07:52:52] [INFO] - [ICMP] - Ping statistics: 3 packets transmitted, 3 packets received, 0.0% packet loss
+[2025-05-12 07:52:52] [INFO] - [ICMP] - Round-trip time: min/avg/max/stddev = 96.389/96.604/97.000/0.280 ms
+[2025-05-12 07:52:53] [INFO] - [HTTP_TIMING] - DNS: 0ms, Connect: 285ms, TTFB: 103ms, Transfer: 0ms
+[2025-05-12 07:52:53] [WARNING] - [HEADERS] - Headers issues: Missing HSTS, Missing CSP, Missing cache control
+[2025-05-12 07:52:53] [INFO] - [REDIRECTS] - 0 redirects in chain
