@@ -130,7 +130,7 @@ When extended diagnostics are run, a message like this will be displayed:
 [2023-11-21 09:15:27] [WARNING] [SSL_CHECK] - Certificate expires in 7 days
 ```
 
-Full example logs: [Pastebin](https://pastebin.com/example123)
+Full example dignostics logs: [Pastebin](https://pastebin.com/Z3idhscu)
 
 ## Architecture
 

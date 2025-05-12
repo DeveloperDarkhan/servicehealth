@@ -19,3 +19,7 @@ __pycache__/
 # Системные файлы (macOS/Windows)
 .DS_Store
 Thumbs.db
+
+# Файл логов
+
+diagnostics.log
