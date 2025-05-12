@@ -158,7 +158,7 @@ graph TD;
     FullDiagnostics --> HTTPTiming[HTTP timing metrics];
     FullDiagnostics --> Headers[HTTP headers check];
     FullDiagnostics --> Redirects[Redirect chain analysis];
-    FullDiagnostics --> Geolocation[Geolocation test];
+    FullDiagnostics --> GetOwnIP[Get your own IP address];
     FullDiagnostics --> Log;
 
     Log --> Exit[End of process];
