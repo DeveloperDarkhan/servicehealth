@@ -4,6 +4,21 @@ from health_check.logger import get_logger
 from health_check.diagnostics import run_basic_diagnostics, run_full_diagnostics
 
 def main():
+    """
+    Entry point of the Service Health and Diagnostic Monitor application.
+
+    Logic:
+        - Parses command-line arguments (see README - Usage, Key Features).
+        - Extracts the domain from the URL.
+        - Creates a centralized logger with the required format.
+        - Checks if the domain can be resolved (DNS + ports).
+        - If the domain is accessible:
+            - Performs an HTTP check (status code 200 and keyword presence).
+            - If the HTTP check fails:
+                - If the --full-diagnostics flag is enabled, runs extended diagnostics (all basic and extended checks, detailed logging).
+                - Otherwise, performs only basic checks (DNS, port, SSL, latency).
+        - All results and errors are logged to a file.
+    """
     args = parse_cli_args()
     domain = args.url.split('/')[2]
     logger = get_logger(args.log_file)
