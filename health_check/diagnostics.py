@@ -14,6 +14,20 @@ from datetime import datetime
 
 
 def check_dns(domain):
+    """
+    Проверяет, возможно ли разрешить доменное имя в IP-адреса (A-записи).
+
+    Args:
+        domain (str): Домен для разрешения.
+
+    Returns:
+        tuple: (bool, list) - Флаг успешного разрешения и список IP-адресов.
+
+    Логика:
+        - Выполняет DNS-запрос на A-записи.
+        - При успехе возвращает список IP.
+        - В случае NXDOMAIN, NoAnswer или Timeout возвращает False и пустой список.
+    """
     try:
         answers = dns.resolver.resolve(domain, "A")
         ip_list = [rdata.address for rdata in answers]
@@ -23,11 +37,39 @@ def check_dns(domain):
 
 
 def is_public_ip(ip):
+    """
+    Определяет, является ли IP публичным (не частным, не loopback, не зарезервированным).
+
+    Args:
+        ip (str): IP-адрес.
+
+    Returns:
+        bool: True если публичный, иначе False.
+
+    Логика:
+        - Анализирует IP через ipaddress.
+        - Возвращает True только для публичных адресов.
+    """
     ip_obj = ipaddress.ip_address(ip)
     return not (ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_reserved)
 
 
 def check_ports(ip, ports, timeout=3):
+    """
+    Проверяет доступность указанных TCP-портов на IP.
+
+    Args:
+        ip (str): IP-адрес.
+        ports (list): Порты для проверки.
+        timeout (int): Таймаут попытки подключения.
+
+    Returns:
+        dict: {порт: bool} - True если порт открыт, иначе False.
+
+    Логика:
+        - Для каждого порта пытается установить TCP-соединение.
+        - Фиксирует результат для каждого порта.
+    """
     results = {}
     for port in ports:
         try:
@@ -39,6 +81,18 @@ def check_ports(ip, ports, timeout=3):
 
 
 def nslookup(domain, logger):
+    """
+    Выполняет nslookup для домена и логирует результат.
+
+    Args:
+        domain (str): Домен для проверки.
+        logger (Logger): Логгер для записи результата.
+
+    Логика:
+        - Запускает системную утилиту nslookup.
+        - Извлекает и логирует IP-адреса и сервер, который ответил.
+        - В случае ошибки пишет ошибку в лог.
+    """
     try:
         output = subprocess.check_output(
             ["nslookup", domain], stderr=subprocess.STDOUT, text=True
@@ -58,6 +112,19 @@ def nslookup(domain, logger):
 
 
 def port_check(domain, logger, port=443, timeout=5):
+    """
+    Проверяет доступность TCP-порта (по умолчанию 443) для домена.
+
+    Args:
+        domain (str): Домен для проверки.
+        logger (Logger): Логгер для записи результата.
+        port (int): Порт для проверки.
+        timeout (int): Таймаут подключения.
+
+    Логика:
+        - Пытается подключиться к домену по указанному порту.
+        - Логирует результат (открыт или нет).
+    """
     try:
         with socket.create_connection((domain, port), timeout=timeout):
             logger.info("[PORT_CHECK] - Port %s/TCP is open for %s", port, domain)
@@ -68,6 +135,22 @@ def port_check(domain, logger, port=443, timeout=5):
 
 
 def ssl_check(domain, logger, port=443):
+    """
+    Проверяет срок действия и валидность SSL-сертификата для домена.
+
+    Args:
+        domain (str): Домен, для которого проводится проверка.
+        logger (Logger): Логгер для записи результатов.
+        port (int): Порт для SSL (по умолчанию 443).
+
+    Логика:
+        - Устанавливает защищённое SSL-соединение с сервером (используя certifi для доверия корневым CA).
+        - Получает SSL-сертификат сервера.
+        - Извлекает дату окончания действия сертификата.
+        - Вычисляет, сколько дней осталось до истечения срока действия.
+        - Логирует результат (количество дней до окончания).
+        - В случае ошибки логирует предупреждение.
+    """
     try:
         context = ssl.create_default_context(cafile=certifi.where())
         with socket.create_connection((domain, port)) as sock:
@@ -87,6 +170,20 @@ def ssl_check(domain, logger, port=443):
 
 
 def latency_measure(url, logger, timeout=10):
+    """
+    Измеряет сетевую задержку (latency) для указанного URL.
+
+    Args:
+        url (str): URL ресурса для измерения задержки.
+        logger (Logger): Логгер для записи результатов.
+        timeout (int): Таймаут HTTP-запроса.
+
+    Логика:
+        - Засекает время перед отправкой HTTP-запроса.
+        - После получения ответа считает разницу времени в миллисекундах.
+        - Логирует результат (latency).
+        - В случае ошибки логирует предупреждение.
+    """
     start = time.time()
     try:
         requests.get(url, timeout=timeout)
@@ -100,7 +197,18 @@ def latency_measure(url, logger, timeout=10):
 
 def get_local_ip(logger):
     """
-    Get local IP address
+    Получает локальный IP-адрес текущего устройства.
+
+    Args:
+        logger (Logger): Логгер для фиксации результата или ошибок.
+
+    Returns:
+        str: Локальный IP-адрес (или None при ошибке).
+
+    Логика:
+        - Открывает UDP-сокет и "подключается" к внешнему адресу (например, Google DNS).
+        - Получает свой локальный IP, используемый для выхода в интернет.
+        - В случае успеха возвращает IP, иначе логирует ошибку.
     """
     try:
         # Connect to an external host; doesn't have to be reachable
@@ -116,7 +224,18 @@ def get_local_ip(logger):
 
 def get_public_ip(logger):
     """
-    Get public IP address
+    Получает публичный (внешний) IP-адрес текущего устройства через внешний сервис.
+
+    Args:
+        logger (Logger): Логгер для фиксации результата или ошибок.
+
+    Returns:
+        str: Публичный IP-адрес (или None при ошибке).
+
+    Логика:
+        - Выполняет HTTP-запрос к сервису https://api.ipify.org?format=json.
+        - Извлекает публичный IP из ответа.
+        - В случае успеха возвращает IP, иначе логирует ошибку.
     """
     try:
         response = requests.get("https://api.ipify.org?format=json")
@@ -130,13 +249,35 @@ def get_public_ip(logger):
 
 def get_own_ip(logger):
     """
-    Get you local address and NAT public address
+    Получает и логирует локальный (private) и внешний (public) IP-адреса машины.
+
+    Args:
+        logger (Logger): Логгер для фиксации результата.
+
+    Логика:
+        - Использует get_local_ip(logger) для получения локального IP.
+        - Использует get_public_ip(logger) для получения публичного IP через внешний сервис.
+        - Логирует оба значения в едином сообщении, чтобы показать текущий адрес для локальной сети и для выхода в интернет.
     """
     private_ip = get_local_ip(logger)
     public_ip = get_public_ip(logger)
     logger.info("[GET_OWN_IP] - Here is your local IP %s and Public IP %s that looks at the Internet", private_ip, public_ip)
 
 def icmp_ping(domain, logger, count=3):
+    """
+    Выполняет ICMP ping домена и логирует статистику потерь пакетов и времени отклика.
+
+    Args:
+        domain (str): Домен для пинга.
+        logger (Logger): Логгер для записи результатов.
+        count (int): Количество ICMP-эха запросов (по умолчанию 3).
+
+    Логика:
+        - Запускает системную утилиту ping с указанным числом пакетов.
+        - Парсит вывод: количество отправленных/полученных пакетов, процент потерь, статистику времени (min/avg/max/stddev).
+        - Логирует статистику передачи и времени.
+        - В случае ошибки (например, запрет ICMP или сбой) логирует предупреждение.
+    """
     try:
         output = subprocess.check_output(
             ["ping", "-c", str(count), domain], stderr=subprocess.STDOUT, text=True
@@ -186,6 +327,20 @@ def icmp_ping(domain, logger, count=3):
 
 
 def http_timing_metrics(url, logger, timeout=10):
+    """
+    Анализирует основные тайминги HTTP-запроса: DNS, соединение, TTFB, передача данных.
+
+    Args:
+        url (str): URL для диагностики.
+        logger (Logger): Логгер для записи результатов.
+        timeout (int): Таймаут HTTP-запроса.
+
+    Логика:
+        - Парсит URL, определяет схему, хост, порт, путь.
+        - Измеряет отдельные этапы: разрешение DNS, соединение, ожидание первого байта (TTFB), передачу всего содержимого.
+        - Логирует метрики по каждому этапу в миллисекундах.
+        - В случае ошибки логирует предупреждение.
+    """
     try:
         parsed = urllib.parse.urlparse(url)
         host = parsed.hostname
@@ -228,6 +383,21 @@ def http_timing_metrics(url, logger, timeout=10):
 
 
 def http_headers_check(url, logger, timeout=10):
+    """
+    Проверяет наличие обязательных HTTP-заголовков безопасности и кеширования.
+
+    Args:
+        url (str): URL для проверки.
+        logger (Logger): Логгер для записи результатов.
+        timeout (int): Таймаут HTTP-запроса.
+
+    Логика:
+        - Выполняет GET-запрос к URL.
+        - Проверяет наличие заголовков: Strict-Transport-Security, Content-Security-Policy, Cache-Control.
+        - Если какие-то отсутствуют — пишет предупреждение с их списком.
+        - Если все есть — пишет информационное сообщение.
+        - В случае ошибки логирует предупреждение.
+    """
     try:
         response = requests.get(url, timeout=timeout)
         headers = response.headers
@@ -247,6 +417,22 @@ def http_headers_check(url, logger, timeout=10):
 
 
 def redirect_chain_analysis(url, logger, timeout=10, max_redirects=3):
+    """
+    Анализирует цепочку HTTP-редиректов для заданного URL и логирует их количество.
+
+    Args:
+        url (str): URL, для которого проводится анализ.
+        logger (Logger): Логгер для записи результатов.
+        timeout (int): Таймаут HTTP-запроса.
+        max_redirects (int): Максимально допустимое число редиректов (по умолчанию 3).
+
+    Логика:
+        - Выполняет GET-запрос с разрешёнными редиректами.
+        - Считает количество перенаправлений (redirects).
+        - Если их больше max_redirects — логирует предупреждение.
+        - Если в пределах нормы — логирует информационное сообщение с количеством.
+        - В случае ошибки логирует предупреждение.
+    """
     try:
         session = requests.Session()
         response = session.get(url, timeout=timeout, allow_redirects=True)
@@ -269,6 +455,21 @@ def redirect_chain_analysis(url, logger, timeout=10, max_redirects=3):
 
 
 def run_basic_diagnostics(domain, url, logger, timeout=10):
+    """
+    Выполняет базовые диагностические проверки для сервиса.
+
+    Args:
+        domain (str): Домен для сетевых и SSL-проверок.
+        url (str): URL для проверки задержки.
+        logger (Logger): Логгер для записи результатов.
+        timeout (int): Таймаут для сетевых операций.
+
+    Логика:
+        - Делает nslookup (проверка DNS).
+        - Проверяет доступность порта 443.
+        - Проверяет срок действия SSL-сертификата.
+        - Измеряет сетевую задержку (latency).
+    """
     nslookup(domain, logger)
     port_check(domain, logger)
     ssl_check(domain, logger)
@@ -276,6 +477,24 @@ def run_basic_diagnostics(domain, url, logger, timeout=10):
 
 
 def run_full_diagnostics(domain, url, logger, timeout=10):
+    """
+    Выполняет полный набор диагностических проверок (базовые + расширенные).
+
+    Args:
+        domain (str): Домен для сетевых и SSL-проверок.
+        url (str): URL для всех HTTP-диагностик.
+        logger (Logger): Логгер для записи результатов.
+        timeout (int): Таймаут для сетевых операций.
+
+    Логика:
+        - Запускает базовые проверки (run_basic_diagnostics).
+        - Дополнительно:
+            - Логирует локальный и внешний IP.
+            - Выполняет ICMP ping.
+            - Анализирует HTTP-тайминги (DNS, connect, TTFB, transfer).
+            - Проверяет важные HTTP-заголовки.
+            - Анализирует цепочку редиректов.
+    """
     run_basic_diagnostics(domain, url, logger, timeout)
     get_own_ip(logger)
     icmp_ping(domain, logger)
