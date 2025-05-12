@@ -98,6 +98,44 @@ def latency_measure(url, logger, timeout=10):
         )
 
 
+def get_local_ip(logger):
+    """
+    Get local IP address
+    """
+    try:
+        # Connect to an external host; doesn't have to be reachable
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+        # logger.info("[OWN_IP] - Local IP Address: %s", local_ip)
+        return local_ip
+    except Exception as e:
+        logger.error("[OWN_IP] - Exception obtaining local IP: %s", str(e))
+
+
+
+def get_public_ip(logger):
+    """
+    Get public IP address
+    """
+    try:
+        response = requests.get("https://api.ipify.org?format=json")
+        response.raise_for_status()
+        public_ip = response.json()["ip"]
+        # logger.info("[OWN_IP] - Public IP Address: %s", public_ip)
+        return public_ip
+    except Exception as e:
+        logger.error("[OWN_IP] - Exception obtaining public IP: %s", str(e))
+
+
+def get_own_ip(logger):
+    """
+    Get you local address and NAT public address
+    """
+    private_ip = get_local_ip(logger)
+    public_ip = get_public_ip(logger)
+    logger.info("[GET_OWN_IP] - Here is your local IP %s and Public IP %s that looks at the Internet", private_ip, public_ip)
+
 def icmp_ping(domain, logger, count=3):
     try:
         output = subprocess.check_output(
@@ -239,6 +277,7 @@ def run_basic_diagnostics(domain, url, logger, timeout=10):
 
 def run_full_diagnostics(domain, url, logger, timeout=10):
     run_basic_diagnostics(domain, url, logger, timeout)
+    get_own_ip(logger)
     icmp_ping(domain, logger)
     http_timing_metrics(url, logger, timeout)
     http_headers_check(url, logger, timeout)
