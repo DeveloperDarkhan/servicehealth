@@ -1,68 +1,66 @@
 # Service Health and Diagnostic Monitor
 
 ## Overview
-Командный инструмент для проверки доступности веб-сервисов с автоматической диагностикой проблем.
+A command-line tool for checking the availability of web services with automatic problem diagnostics.
 
-**Основная функциональность:**
-- Проверка HTTP статуса 200
-- Поиск ключевого слова "Success" в теле ответа
-- Автоматический запуск диагностики при ошибках
-- Детальное логирование всех операций
+**Main features:**
+- HTTP status check (200)
+- Search for the keyword "Success" in the response body
+- Automatic diagnostics on failures
+- Detailed logging of all operations
 
 ## Key Features
 
-✅ Проверка здоровья сервиса с настраиваемым таймаутом  
-✅ Комплексная диагностика сетевых проблем  
-✅ Централизованное логирование в стандартизированном формате  
-✅ Поддержка обязательных параметров CLI  
-✅ Многоуровневая диагностика (базовая/расширенная)  
-✅ Анализ полного цикла HTTP-запроса с таймингами  
-✅ Межрегиональные проверки доступности сервиса
+✅ Service health check with configurable timeout  
+✅ Comprehensive network problem diagnostics  
+✅ Centralized logging in a standardized format  
+✅ Support for essential CLI parameters  
+✅ Multi-level diagnostics (basic/extended)  
+✅ Full HTTP request cycle analysis with timing  
 
 ## Diagnostic Requirements
-### Условия запуска диагностики:
-1. Запуск диагностики если статус не равен 200 или тело не имеет слова "Success"
-2. Расширенные проверки активируются флагом `--full-diagnostics true`
+### Conditions to run diagnostics:
+1. Run diagnostics if status != 200 or response body does not contain "Success"
+2. Extended checks are activated with the flag `--full-diagnostics true`
 
-### Диагностические проверки:
-**Базовые (всегда выполняются):**
+### Diagnostic checks:
+**Basic (always performed):**
 1. **DNS Resolution (nslookup)**  
-   Проверка корректности DNS-записей
+   Verify DNS records correctness
 2. **Port Check (443/TCP)**  
-   Валидация доступности HTTPS-порта
+   Validate HTTPS port accessibility
 3. **SSL Certificate Verification**  
-   Проверка срока действия и валидности сертификата
+   Check certificate expiration and validity
 4. **Latency Measurement**  
-   Замер времени отклика сервиса
+   Measure service response time
 
-**Расширенные (требуют --full-diagnostics):**
-5. **Get Local and Public IP address**  
-   Вывод локальных адресов
+**Extended (require `--full-diagnostics`):**
+5. **Get Local and Public IP addresses**  
+   Output local IP addresses
 6. **ICMP Availability**  
-   Проверка доступности узла через ping
+   Check node availability via ping
 7. **HTTP Timing Metrics**  
-   Анализ времени DNS, подключения, TTFB и передачи данных
+   Analyze DNS, connect, TTFB, and data transfer timings
 8. **HTTP Headers Validation**  
-   Проверка security headers и заголовков кеширования
+   Check security headers and cache-control headers
 9. **Redirect Chain Analysis**  
-   Контроль цепочки редиректов (макс. 3 перенаправления)
+   Monitor redirect chains (max 3 redirects)
 
 ## Diagnostic Actions Explanation
-| Проверка                | Цель                                                                 | Режим       |
-|-------------------------|----------------------------------------------------------------------|-------------|
-| DNS Resolution          | Выявление проблем с DNS-серверами или некорректных записей           | Базовый     |
-| Port Check              | Проверка доступности критических портов сервиса                      | Базовый     |
-| SSL Verification        | Обнаружение проблем с SSL-сертификатами                              | Базовый     |
-| Keyword Check           | Подтверждение корректности содержимого страницы                      | Базовый     |
-| ICMP Availability       | Проверка сетевой доступности узла на уровне L3                       | Расширенный |
-| HTTP Timing Metrics     | Локализация задержек на конкретных этапах запроса                    | Расширенный |
-| HTTP Headers Check      | Валидация security headers (HSTS, CSP)                               | Расширенный |
-| Redirect Chain Analysis | Предотвращение false-positive из-за цепочек редиректов               | Расширенный |
-| Get your own ip address | Выводит твой локальный и публичный адрес который смотрит в Интернет  | Расширенный |
-
+| Check                     | Purpose                                                        | Mode        |
+|---------------------------|----------------------------------------------------------------|-------------|
+| DNS Resolution            | Detect DNS server issues or incorrect records                | Basic       |
+| Port Check                | Verify availability of critical service ports                   | Basic       |
+| SSL Verification          | Detect SSL certificate problems                                | Basic       |
+| Keyword Check             | Confirm correct page content                                   | Basic       |
+| ICMP Availability         | Check network reachability at layer 3                         | Extended    |
+| HTTP Timing Metrics       | Localize delays at specific request stages                     | Extended    |
+| HTTP Headers Check        | Validate security headers (HSTS, CSP)                          | Extended    |
+| Redirect Chain Analysis   | Avoid false positives due to redirect chains                  | Extended    |
+| Get your own IP address   | Show your local and public IPs used for internet access        | Extended    |
 
 ## Installation
-```
+```bash
 git clone https://github.com/DeveloperDarkhan/servicehealth.git
 cd servicehealth
 python -m venv venv
@@ -71,109 +69,110 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-Базовый запуск:
-```
+Basic run:
+```bash
 python health_check.py \
   --url https://sre-test-assignment.innervate.tech/health.html \
   --keyword "Success"
 ```
 
-Доступные параметры:
-| Параметр      | По умолчанию              | Описание                  |
-|---------------|---------------------------|---------------------------|
-| --timeout     | 10                        | Таймаут запроса (сек)     |
-| --log-file    | diagnostics.log           | Файл логов                |
-| --keyword     | Success                   | Поиск слова ответе        |
-| --full-diagnostics | false                | Расширенная диагностика   |
-
+Available parameters:
+| Parameter            | Default                         | Description                    |
+|----------------------|---------------------------------|--------------------------------|
+| --timeout            | 10                              | Request timeout (seconds)      |
+| --log-file           | diagnostics.log                 | Log file                       |
+| --keyword            | Success                         | Keyword to search in response  |
+| --full-diagnostics   | false                           | Extended diagnostics mode      |
 
 ## Testing Scenarios
-### Успешная проверка
-```
+### Successful check
+```bash
 python health_check.py --url https://valid-url/health.html --keyword "Success"
 ```
-
-**Ожидаемый результат:**
-Вывод "Success" в stdout
-```
+**Expected result:**  
+"Success" printed to stdout  
+```plaintext
 [2023-11-21 09:15:25] [INFO] [HTTP_CHECK] - Status code is 200 and response body contains a keyword "Success"
 ```
 
-### Неудачная проверка
-```
+### Failed check
+```bash
 python health_check.py --url https://invalid-url/health.html --keyword "Success"
 ```
+**Expected result:**  
+- Empty stdout  
+- Diagnostic logs written to `diagnostics.log`
 
-**Ожидаемый результат:**
-- Пустой stdout
-- Запись диагностических данных в diagnostics.log
-
-### Расширенная диагностика
-```
+### Extended diagnostics
+```bash
 python health_check.py --url https://problem-url/health.html --full-diagnostics true
 ```
-**Ожидаемый результат:**
-- Все базовые и расширенные проверки в логе
-- Детализированные метрики производительности:
-```
+**Expected result:**  
+- All basic and extended checks in logs  
+- Detailed performance metrics:
+```plaintext
 [2023-11-21 14:30:45] [INFO] [HTTP_TIMING] - DNS: 152ms, Connect: 320ms, TTFB: 410ms
 [2023-11-21 14:30:47] [WARNING] [REDIRECTS] - 4 redirects detected (max allowed: 3)
 ```
 
 ## Logging Format
-**Требования к формату:**
+**Format requirements:**  
 [YYYY-MM-DD HH:MM:SS] [LEVEL] [ACTION] - Message
 
-При запуске рассширенной диагностики выйдет сообщение:
+When extended diagnostics are run, a message like this will be displayed:  
 [YYYY-MM-DD HH:MM:SS] [INFO] [CONFIG] - Full diagnostics mode enabled
 
-**Пример логов:**
-```
+**Example logs:**
+```plaintext
 [2023-11-21 09:15:23] [ERROR] [HTTP_CHECK] - Status code 503 received
 [2023-11-21 09:15:25] [INFO] [DNS_CHECK] - nslookup result for example.com: 192.0.2.1
 [2023-11-21 09:15:27] [WARNING] [SSL_CHECK] - Certificate expires in 7 days
 ```
 
-Полный пример логов: [Pastebin](https://pastebin.com/example123)
+Full example logs: [Pastebin](https://pastebin.com/example123)
 
 ## Architecture
 
 ```mermaid
 graph TD;
-    Start[Запуск скрипта] --> ParamCheck{Параметры валидны?};
-    ParamCheck -->|Да| HealthCheck;
-    ParamCheck -->|Нет| Error[Завершение с ошибкой];
-    HealthCheck --> HTTPReq[Отправка HTTP-запроса];
-    HTTPReq --> StatusCheck{Статус 200?};
-    StatusCheck -->|Да| KeywordCheck;
-    StatusCheck -->|Нет| Diagnostics;
-    KeywordCheck -->|Ключевое слово найдено| SuccessOutput[Вывод Success];
-    KeywordCheck -->|Ключевое слово отсутствует| Diagnostics;
-    
-    Diagnostics --> DNS[Проверка DNS];
-    Diagnostics --> Port[Проверка порта 443];
-    Diagnostics --> SSL[Проверка SSL];
+    Start[Script start] --> ParamCheck{Are parameters valid?};
+    ParamCheck -->|Yes| HealthCheck;
+    ParamCheck -->|No| Error[Terminate with error];
+    HealthCheck --> HTTPReq[Send HTTP request];
+    HTTPReq --> StatusCheck{Status 200?};
+    StatusCheck -->|Yes| KeywordCheck;
+    StatusCheck -->|No| Diagnostics;
+    KeywordCheck -->|Keyword found| SuccessOutput[Output Success];
+    KeywordCheck -->|Keyword missing| Diagnostics;
+
+    Diagnostics --> DNS[DNS check];
+    Diagnostics --> Port[Port 443 check];
+    Diagnostics --> SSL[SSL verification];
     Diagnostics --> CheckFullDiag{--full-diagnostics?};
-    
-    CheckFullDiag -->|True| FullDiagnostics[Полная диагностика];
-    CheckFullDiag -->|False| Log[Запись в лог];
-    
-    FullDiagnostics --> Ping[ICMP Availability];
-    FullDiagnostics --> HTTPTiming[HTTP Timing Metrics];
-    FullDiagnostics --> Headers[HTTP Headers Check];
-    FullDiagnostics --> Redirects[Redirect Chain Analysis];
-    FullDiagnostics --> Geolocation[Geolocation Test];
+
+    CheckFullDiag -->|True| FullDiagnostics[Full diagnostics];
+    CheckFullDiag -->|False| Log[Log entry];
+
+    FullDiagnostics --> Ping[ICMP availability];
+    FullDiagnostics --> HTTPTiming[HTTP timing metrics];
+    FullDiagnostics --> Headers[HTTP headers check];
+    FullDiagnostics --> Redirects[Redirect chain analysis];
+    FullDiagnostics --> Geolocation[Geolocation test];
     FullDiagnostics --> Log;
-    
-    Log --> Exit[Завершение работы];
+
+    Log --> Exit[End of process];
 ```
 
 ## Advanced Features
-- Экспорт метрик в формате Prometheus
-- Контекстные таймауты для разных проверок
-- Цветовой вывод в консоль
-- Поддержка прокси-серверов
-- Исторический анализ показателей
+- Export metrics in Prometheus format
+- Contextual timeouts for various checks
+- Colorized output in the console
+- Proxy server support
+- Historical performance analysis
 
 ## License
-MIT License. Подробнее см. в файле LICENSE.
+MIT License. See the LICENSE file for details.
+
+---
+
+Let me know if you'd like any further assistance!
