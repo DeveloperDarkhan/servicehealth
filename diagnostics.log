@@ -1,0 +1,3 @@
+[2025-05-12 03:07:04] [ERROR] - [DNS_CHECK] - DNS resolution failed for sre-test-assignment.innervatezzz.tech
+[2025-05-12 03:08:07] [INFO] - [DNS_CHECK] - DNS resolution successful, IPs: 193.122.1.206
+[2025-05-12 03:08:07] [ERROR] - [IP_CHECK] - IP addresses are private or behind a firewall, IPs: 193.122.1.206
