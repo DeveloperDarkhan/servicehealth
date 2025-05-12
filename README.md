@@ -164,16 +164,6 @@ graph TD;
     Log --> Exit[End of process];
 ```
 
-## Advanced Features
-- Export metrics in Prometheus format
-- Contextual timeouts for various checks
-- Colorized output in the console
-- Proxy server support
-- Historical performance analysis
 
 ## License
 MIT License. See the LICENSE file for details.
-
----
-
-Let me know if you'd like any further assistance!
