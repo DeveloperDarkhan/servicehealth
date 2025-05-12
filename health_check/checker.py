@@ -10,19 +10,19 @@ from datetime import datetime
 
 def verify_dns(domain, logger, ports=[80, 443]):
     """
-    Комплексная проверка DNS и доступности IP-адресов домена по портам (по умолчанию 80 и 443).
+    Comprehensive DNS check and IP address/port availability for a given domain (default ports 80 and 443).
 
     Args:
-        domain (str): Доменное имя для проверки.
-        logger (Logger): Объект логгера для записи событий.
-        ports (list): Список портов для проверки (по умолчанию [80, 443]).
+        domain (str): Domain name to check.
+        logger (Logger): Logger object for event logging.
+        ports (list): List of ports to check (default [80, 443]).
 
-    Логика:
-        1. Проверяет возможность разрешения домена в IP (стандартные DNS, затем публичные).
-        2. Если не удалось разрешить, пишет ошибку в лог.
-        3. Если IP-адреса найдены — проверяет доступность по портам.
-        4. Если хотя бы для одного IP порт 443 доступен — возвращает True.
-        5. Если порт 443 не открыт ни для одного IP — пишет ошибку в лог.
+    Logic:
+        1. Checks if the domain can be resolved to IP (standard DNS, then public).
+        2. If resolution fails, writes error to log.
+        3. If IP addresses are found — checks port availability.
+        4. If at least one IP has port 443 open — returns True.
+        5. If port 443 is not open on any IP — logs error.
     """
     resolvable, ips = check_dns(domain)
     if not resolvable:
@@ -32,25 +32,20 @@ def verify_dns(domain, logger, ports=[80, 443]):
         logger.error("[DNS_CHECK] - DNS resolution failed for %s", domain)
 
     else:
-        # logger.info("[DNS_CHECK] - DNS resolution successful, IPs: %s", ', '.join(ips))
+
         for ip in ips:
-            # if is_public_ip(ip):
-            # logger.info("[IP_CHECK] - %s is public IP", ip)
 
             ports_to_check = ports
-            # port_access = False
-            port_access_found = False  # флаг, если хотя бы один IP с открытым портом
+
+            port_access_found = False  # flag if at least one IP has an open port
             results = check_ports(ip, ports_to_check)
 
             for port in ports_to_check:
                 if results[port]:
-                    # logger.info("[PORT_ACCESS] - Access to %s:%s is available", ip, port)
+
                     if port == 443:
                         port_access_found = True
-                # else:
-                #     logger.error("[PORT_ACCESS] - Access to %s:%s is not available", ip, port)
 
-            # else:
         if not port_access_found:
             logger.info(
                 "[DNS_CHECK] - DNS resolution successful, IPs: %s", ", ".join(ips)
@@ -60,26 +55,26 @@ def verify_dns(domain, logger, ports=[80, 443]):
                 ", ".join(ips),
             )
 
-        # Проверка если один порт 443 доступен
+        # Check if at least one port 443 is available
         if port_access_found:
             return True
 
 
 def check_dns(domain, customnameservers=False):
     """
-    Проверяет, можно ли разрешить домен в IP-адреса.
+    Checks if the domain can be resolved to IP addresses.
 
     Args:
-        domain (str): Доменное имя.
-        customnameservers (bool): Использовать публичные DNS (True) или стандартные (False).
+        domain (str): Domain name.
+        customnameservers (bool): Use public DNS (True) or default (False).
 
     Returns:
-        tuple: (resolvable (bool), спискок IP (list))
+        tuple: (resolvable (bool), list of IPs (list))
 
-    Логика:
-        1. Получает A-записи домена.
-        2. При customnameservers=True использует публичные DNS.
-        3. При успехе возвращает (True, список IP), иначе (False, []).
+    Logic:
+        1. Gets A-records for the domain.
+        2. Uses public DNS if customnameservers=True.
+        3. On success returns (True, list of IPs), else (False, []).
     """
     try:
         answers = dns.resolver.resolve(domain, "A")
@@ -97,17 +92,17 @@ def check_dns(domain, customnameservers=False):
 
 def is_public_ip(ip):
     """
-    Определяет, является ли IP-адрес публичным.
+    Determines whether the IP address is public.
 
     Args:
-        ip (str): IP-адрес.
+        ip (str): IP address.
 
     Returns:
-        bool: True если IP публичный, иначе False.
+        bool: True if the IP is public, else False.
 
-    Логика:
-        - Преобразует строку в объект ipaddress.
-        - Проверяет, не является ли адрес приватным, loopback или зарезервированным.
+    Logic:
+        - Converts the string to an ipaddress object.
+        - Checks if the address is not private, loopback, or reserved.
     """
     ip_obj = ipaddress.ip_address(ip)
     return not (ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_reserved)
@@ -115,21 +110,21 @@ def is_public_ip(ip):
 
 def check_ports(ip, ports, timeout=2):
     """
-    Проверяет доступность указанных портов на данном IP-адресе.
+    Checks the availability of the specified ports on the given IP address.
 
     Args:
-        ip (str): IP-адрес.
-        ports (list): Список портов для проверки.
-        timeout (int): Таймаут подключения в секундах (по умолчанию 2).
+        ip (str): IP address.
+        ports (list): List of ports to check.
+        timeout (int): Connection timeout in seconds (default 2).
 
     Returns:
-        dict: Словарь {порт: bool}, где True — порт доступен, False — порт недоступен.
+        dict: Dictionary {port: bool}, where True means the port is open, False means closed.
 
-    Логика:
-        - Для каждого порта из списка пытается установить TCP-соединение.
-        - Если соединение прошло успешно — порт считается доступным.
-        - В случае ошибки или таймаута — порт считается недоступным.
-        - Возвращает словарь с результатами проверки по каждому порту.
+    Logic:
+        - For each port in the list, tries to establish a TCP connection.
+        - If the connection is successful — the port is considered open.
+        - In case of error or timeout — the port is considered closed.
+        - Returns a dictionary with results for each port.
     """
     results = {}
     for port in ports:
@@ -143,25 +138,25 @@ def check_ports(ip, ports, timeout=2):
 
 def check_http(domain, url, keyword, timeout, logger):
     """
-    Проверяет, доступен ли указанный URL и содержит ли ответ ключевое слово.
+    Checks if the specified URL is available and if the response contains the keyword.
 
     Args:
-        domain (str): Домен (не используется явно, но может быть полезен для логирования).
-        url (str): URL для проверки.
-        keyword (str): Ключевое слово для поиска в ответе.
-        timeout (int): Таймаут запроса в секундах.
-        logger (Logger): Объект логгера для записи событий.
+        domain (str): Domain (not used directly but can be useful for logging).
+        url (str): URL to check.
+        keyword (str): Keyword to search for in the response.
+        timeout (int): Request timeout in seconds.
+        logger (Logger): Logger object for event logging.
 
     Returns:
-        bool: True, если код ответа 200 и ключевое слово найдено в теле ответа. Иначе False.
+        bool: True if status code is 200 and the keyword is found in the response body. Otherwise False.
 
-    Логика:
-        - Выполняет HTTP GET-запрос по заданному URL.
-        - Если код ответа 200, извлекает текст из HTML, ищет ключевое слово (регистронезависимо).
-        - Если найдено — пишет положительный результат в консоль, возвращает True.
-        - Если не найдено — фиксирует ошибку в лог, возвращает False.
-        - Если не 200 — пишет ошибку в лог, возвращает False.
-        - В случае ошибки запроса — логирует её как ошибку.
+    Logic:
+        - Performs an HTTP GET request to the specified URL.
+        - If status code is 200, extracts text from the HTML and searches for the keyword (case-insensitive).
+        - If found — prints a positive result to the console, returns True.
+        - If not found — logs an error, returns False.
+        - If status code is not 200 — logs an error, returns False.
+        - In case of request error — logs it as an error.
     """
     try:
         resp = requests.get(url, timeout=timeout)
@@ -177,16 +172,13 @@ def check_http(domain, url, keyword, timeout, logger):
                 )
                 return True
             else:
-                # if logger:
                 logger.error(
                     '[HTTP_CHECK] - Check failed for url %s. Keyword "%s" not found in response text.',
                     url,
                     keyword,
                 )
-                # logger.error('[HTTP_CHECK] - Status code %d but keyword "%s" not found in response text', resp.status_code, keyword)
                 return False
         else:
-            # if logger:
             logger.error("[HTTP_CHECK] - Status code %d received", resp.status_code)
             return False
 
