@@ -165,5 +165,34 @@ graph TD;
 ```
 
 
+## Go Learning Resources / Изучение Go
+
+🚀 **Хотите изучить Go?** В этом репозитории добавлены материалы для изучения языка программирования Go!
+
+### Что включено:
+- **Полное руководство** по изучению Go с нуля
+- **Практические примеры** от базовых до продвинутых
+- **Реализация Health Check на Go** как учебный проект
+- **Пошаговые инструкции** и объяснения
+
+### Начать изучение:
+1. Перейдите в папку [`golang-learning/`](./golang-learning/)
+2. Читайте руководство в [`golang-learning/README.md`](./golang-learning/README.md)
+3. Изучайте примеры в [`golang-learning/examples/`](./golang-learning/examples/)
+4. Попробуйте Go версию проекта в [`golang-learning/go-healthcheck/`](./golang-learning/go-healthcheck/)
+
+### Темы для изучения:
+- ✅ Основы языка Go
+- ✅ Функции и структуры
+- ✅ HTTP клиенты
+- ✅ Работа с JSON
+- ✅ Файловые операции
+- ✅ Параллельность (goroutines)
+- ✅ Практический проект
+
+**Удачи в изучении Go! 🐹**
+
+---
+
 ## License
 MIT License. See the LICENSE file for details.
